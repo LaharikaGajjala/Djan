@@ -1,0 +1,91 @@
+django-admin startproject mysite
+
+Django database model
+Change /mysite/notes/models.py to:
+from django.db import models
+
+class Note(models.Model):
+text = models.CharField(max_length=120)
+created = models.DateTimeField(auto_now_add=True)
+python manage.py runserver
+Open http://127.0.0.1:8000 in your web browser to see result
+python manage.py startapp notes
+
+
+Run tha app:
+python manage.py syncdb
+which will update the database. We then update /mysite/mysite/admin.py to:
+from django.contrib import admin
+
+# Register your models here.
+from .models import Note
+
+class NoteAdmin(admin.ModelAdmin):
+class Meta:
+model = Note
+
+admin.site.register(Note,NoteAdmin)
+
+
+python manage.py makemigrations notes
+python manage.py migrate
+
+
+Finally create /mysite/static/templates/ and add note.html, which is a simple static html file.
+Open http://127.0.0.1:8000/ to test if works
+Later open your browser you will see the list of notes
+
+
+
+Change view.py according to our requirments:
+from django.shortcuts import render, render_to_response, RequestContext
+from django.template import RequestContext, loader
+from django.http import HttpResponse
+from .models import Note
+from .forms import NoteForm
+
+# Create your views here.
+
+def home(request):
+notes = Note.objects
+template = loader.get_template('note.html')
+form = NoteForm(request.POST or None)
+if form.is_valid():
+save_it = form.save(commit=False)
+save_it.save()
+
+context = {'notes': notes, 'form': form}
+return render(request, 'note.html', context)
+
+Finally we update note.html to:
+
+<h2>Notes</h2>
+<ul>
+          &#123;% for note in notes.all %&#125;
+ 	<li>&#123; &#123; note.text &#125;&#125;</li>
+&#123;% endfor %&#125;</ul>
+<form method="POST" action="">&#123;% csrf_token %&#125;
+&#123; &#123; form.as_p &#125;&#125;
+<input type="submit">
+</form>
+
+
+Styling the app
+
+By modifying the note.html we can style it like any other html/css website. If you change note.html to
+
+ 	<link href="http://codepen.io/edbond88/pen/CcgvA.css" media="screen" rel="stylesheet" type="text/css">
+<style>
+            body {<br />
+              background: rgba(222,222,222,1);<br />
+              margin: 20px;<br />
+            }<br />
+            </style>
+<h1>Django Note Taking App</h1>
+
+
+<form method="POST" action="">&#123;% csrf_token %&#125;
+{ { form.as_p }}
+<input type="submit" value="Add note">
+</form>
+
